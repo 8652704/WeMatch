@@ -1,0 +1,23 @@
+app = "wematch"
+primary_region = "lax"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+
+[[mounts]]
+  source = "wematch_data"
+  destination = "/data"
+
+[env]
+  NODE_ENV = "production"
+  DB_PATH = "/data/wematch.db"
+  ALLOWED_ORIGINS = "https://wematch.dating,https://www.wematch.dating"
+  JWT_EXPIRES_IN = "7d"
+  JWT_REFRESH_EXPIRES_IN = "30d"
