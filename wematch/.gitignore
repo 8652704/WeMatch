@@ -1,0 +1,13 @@
+.env
+.env.local
+.env.production.local
+data/
+*.db
+*.sqlite
+node_modules/
+logs/
+*.log
+.DS_Store
+dist/
+.vercel/
+.fly/
