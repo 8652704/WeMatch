@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: wematch
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run db:migrate
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: wematch-db
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_PATH
+        value: /data/wematch.db
+      - key: ALLOWED_ORIGINS
+        value: https://wematch.dating,https://www.wematch.dating
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
