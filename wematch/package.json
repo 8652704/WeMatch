@@ -7,7 +7,7 @@
     "start": "node backend/server.js",
     "start:prod": "node scripts/migrate.js && node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "db:migrate": "node scripts/migrate.js",
+    "db:migrate": "node scripts/migrate.js && node scripts/migrate-subscriptions.js",
     "db:seed": "node scripts/seed.js"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "stripe": "^14.21.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": { "nodemon": "^3.1.0" },
