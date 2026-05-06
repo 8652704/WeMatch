@@ -10,9 +10,11 @@ const userRoutes = require('./routes/users');
 const circleRoutes = require('./routes/circles');
 const referralRoutes = require('./routes/referrals');
 const matchRoutes = require('./routes/matches');
+const subscriptionRoutes = require('./routes/subscriptions');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
 
 app.set('trust proxy', 1);
 app.use((req, res, next) => {
@@ -67,6 +69,7 @@ app.use('/api/users', apiLimiter, userRoutes);
 app.use('/api/circles', apiLimiter, circleRoutes);
 app.use('/api/referrals', apiLimiter, referralRoutes);
 app.use('/api/matches', apiLimiter, matchRoutes);
+app.use('/api/subscriptions', apiLimiter, subscriptionRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0', env: process.env.NODE_ENV, timestamp: new Date().toISOString() }));
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/public/index.html')));
