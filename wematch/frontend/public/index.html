@@ -432,13 +432,13 @@
       <div class="price-tier">Premium</div><div class="price-amount">$9</div><div class="price-period">per month</div>
       <div class="price-divider"></div>
       <ul class="price-features"><li>Unlimited Circle members</li><li>Boosted referrals</li><li>Advanced filters & preferences</li><li>Group intro chats</li><li>Read receipts & nudges</li></ul>
-      <button class="price-btn filled" onclick="openModal()">Sign In</button>
+      <button class="price-btn filled" onclick="subscribe('premium')">Get Premium</button>
     </div>
     <div class="price-card fade-in" style="transition-delay:.15s;">
       <div class="price-tier">Elite Circle</div><div class="price-amount">$24</div><div class="price-period">per month</div>
       <div class="price-divider"></div>
       <ul class="price-features"><li>Everything in Premium</li><li>Curated event invites</li><li>Dedicated matchmaker tier</li><li>Priority support</li><li>Exclusive singles events</li></ul>
-      <button class="price-btn" onclick="openModal()">Sign In</button>
+      <button class="price-btn" onclick="subscribe('premium')">Get Premium</button>
     </div>
   </div>
 </section>
@@ -951,3 +951,22 @@ if (API.token) { showDashboard(); }
 
 </body>
 </html>
+<script>
+let _pendingPlan = null;
+async function subscribe(plan) {
+  if (!API.token) { _pendingPlan = plan; openModal(); return; }
+  try { const { url } = await API.post('/subscriptions/create-checkout', { plan }); window.location.href = url; }
+  catch (err) { alert(err.message); }
+}
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const checkout = params.get('checkout');
+  if (!checkout) return;
+  history.replaceState({}, '', '/');
+  const b = document.createElement('div');
+  b.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:.85rem 2rem;border-radius:100px;font-weight:600;font-size:.9rem;box-shadow:0 4px 24px rgba(0,0,0,.3);';
+  if (checkout==='success') { b.style.background='linear-gradient(135deg,#F0607A,#9B6FD4)'; b.style.color='#fff'; b.textContent='🎉 Welcome to WeMatch! Your subscription is active.'; }
+  else { b.style.background='rgba(255,255,255,0.1)'; b.style.color='rgba(255,255,255,0.8)'; b.textContent='Checkout cancelled — you can subscribe any time.'; }
+  document.body.appendChild(b); setTimeout(()=>b.remove(),5000);
+})();
+</script>
