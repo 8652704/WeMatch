@@ -949,9 +949,10 @@ async function saveProfile() {
 if (API.token) { showDashboard(); }
 </script>
 
-</body>
-</html>
+
 <script>
+ </body>
+</html>
 let _pendingPlan = null;
 async function subscribe(plan) {
   if (!API.token) { _pendingPlan = plan; openModal(); return; }
