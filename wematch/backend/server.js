@@ -16,7 +16,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
 
-app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
 app.set('trust proxy', 1);
 app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
@@ -70,7 +69,6 @@ app.use('/api/users', apiLimiter, userRoutes);
 app.use('/api/circles', apiLimiter, circleRoutes);
 app.use('/api/referrals', apiLimiter, referralRoutes);
 app.use('/api/matches', apiLimiter, matchRoutes);
-app.use('/api/subscriptions', apiLimiter, subscriptionRoutes);
 app.use('/api/subscriptions', apiLimiter, subscriptionRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0', env: process.env.NODE_ENV, timestamp: new Date().toISOString() }));
