@@ -951,8 +951,7 @@ if (API.token) { showDashboard(); }
 
 
 <script>
- </body>
-</html>
+ 
 let _pendingPlan = null;
 async function subscribe(plan) {
   if (!API.token) { _pendingPlan = plan; openModal(); return; }
@@ -971,3 +970,5 @@ async function subscribe(plan) {
   document.body.appendChild(b); setTimeout(()=>b.remove(),5000);
 })();
 </script>
+</body>
+</html>
