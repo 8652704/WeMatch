@@ -11,7 +11,6 @@ const circleRoutes = require('./routes/circles');
 const referralRoutes = require('./routes/referrals');
 const matchRoutes = require('./routes/matches');
 const subscriptionRoutes = require('./routes/subscriptions');
-const subscriptionRoutes = require('./routes/subscriptions');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
