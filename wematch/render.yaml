@@ -4,8 +4,8 @@ services:
     runtime: node
     plan: starter
     region: oregon
-    buildCommand: npm install && npm run db:migrate
-    startCommand: npm start
+       buildCommand: npm install
+    startCommand: node scripts/migrate.js && node scripts/migrate-subscriptions.js && node backend/server.js
     healthCheckPath: /api/health
     autoDeploy: true
     disk:
