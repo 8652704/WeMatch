@@ -111,7 +111,7 @@ router.get('/me', requireAuth, (req, res) => {
   const db = getDb();
   const user = db.prepare(`
     SELECT id, email, name, avatar_url, bio, age, gender,
-           looking_for, interests, values, location, created_at
+           looking_for, interests, core_values, location, created_at
     FROM users WHERE id = ?
   `).get(req.user.id);
   res.json({ user });
