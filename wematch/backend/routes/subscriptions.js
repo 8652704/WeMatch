@@ -3,7 +3,9 @@ const Stripe  = require('stripe');
 const { getDb } = require('../config/database');
 const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 const PLANS = {
   premium: { priceId: process.env.STRIPE_PREMIUM_PRICE_ID },
   elite:   { priceId: process.env.STRIPE_ELITE_PRICE_ID },
