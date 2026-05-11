@@ -36,7 +36,8 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'fonts.gstatic.com'],
       fontSrc: ["'self'", 'fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:', 'blob:'],
+            imgSrc:      ["'self'", 'data:', 'blob:'],
+      scriptSrcAttr: ["'unsafe-inline'"],
     },
   },
   hsts: process.env.NODE_ENV === 'production'
