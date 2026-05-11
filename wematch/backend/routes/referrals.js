@@ -14,7 +14,7 @@ router.get('/', requireAuth, (req, res) => {
     SELECT r.*,
            ref.name  AS referrer_name,  ref.avatar_url  AS referrer_avatar,
            cand.name AS candidate_name, cand.avatar_url AS candidate_avatar,
-           cand.bio, cand.age, cand.interests, cand.values, cand.location
+           cand.bio, cand.age, cand.interests, cand.core_values, cand.location
     FROM referrals r
     JOIN users ref  ON ref.id  = r.referrer_id
     JOIN users cand ON cand.id = r.candidate_id
@@ -36,7 +36,7 @@ router.get('/', requireAuth, (req, res) => {
 
   // Parse JSON arrays
   received.forEach(r => {
-    ['interests', 'values'].forEach(k => {
+    ['interests', 'core_values'].forEach(k => {
       if (r[k]) { try { r[k] = JSON.parse(r[k]); } catch {} }
     });
   });
@@ -83,7 +83,7 @@ router.post('/', requireAuth, [
   const id = uuid();
   db.prepare(`
     INSERT INTO referrals (id, referrer_id, recipient_id, candidate_id, note)
-    VALUES (?, ?, ?, ?, ?)
+    core_values (?, ?, ?, ?, ?)
   `).run(id, req.user.id, recipient_id, candidate_id, note || null);
 
   res.status(201).json({ message: 'Referral sent!', referral_id: id });
@@ -113,7 +113,7 @@ router.post('/:id/accept', requireAuth, (req, res) => {
     const existingMatch = db.prepare('SELECT id FROM matches WHERE user_a_id = ? AND user_b_id = ?').get(a, b);
     if (!existingMatch) {
       const matchId = uuid();
-      db.prepare('INSERT INTO matches (id, user_a_id, user_b_id, referral_id) VALUES (?, ?, ?, ?)')
+      db.prepare('INSERT INTO matches (id, user_a_id, user_b_id, referral_id) core_values (?, ?, ?, ?)')
         .run(matchId, a, b, referral.id);
 
       // Update referral status + update matchmaker badge
@@ -161,7 +161,7 @@ function _updateMatchmakerBadge(db, userId) {
       db.prepare('UPDATE trust_badges SET badge = ?, matches_made = ? WHERE user_id = ?')
         .run(badge, total, userId);
     } else {
-      db.prepare('INSERT INTO trust_badges (id, user_id, badge, matches_made) VALUES (?, ?, ?, ?)')
+      db.prepare('INSERT INTO trust_badges (id, user_id, badge, matches_made) core_values (?, ?, ?, ?)')
         .run(uuid(), userId, badge, total);
     }
   }
