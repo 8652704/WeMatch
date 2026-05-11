@@ -15,6 +15,7 @@ router.get('/status', requireAuth, (req, res) => {
   res.json({ plan: user.plan||'free', status: user.subscription_status||'inactive', expires_at: user.plan_expires_at });
 });
 router.post('/create-checkout', requireAuth, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Subscriptions not configured yet.' });
   const { plan } = req.body;
   if (!PLANS[plan]) return res.status(400).json({ error: 'Invalid plan.' });
   const db = getDb();
