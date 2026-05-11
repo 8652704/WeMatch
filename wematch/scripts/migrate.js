@@ -19,7 +19,7 @@ db.exec(`
     gender      TEXT CHECK(gender IN ('man','woman','nonbinary','other')),
     looking_for TEXT,       -- JSON array e.g. '["woman","nonbinary"]'
     interests   TEXT,       -- JSON array e.g. '["hiking","coffee","travel"]'
-    values      TEXT,       -- JSON array e.g. '["family","adventure"]'
+    core_values      TEXT,       -- JSON array e.g. '["family","adventure"]'
     location    TEXT,
     verified    INTEGER DEFAULT 0,
     active      INTEGER DEFAULT 1,
