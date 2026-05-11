@@ -31,9 +31,9 @@ router.patch('/profile', requireAuth, [
 
   updates.updated_at = new Date().toISOString();
   const sets = Object.keys(updates).map(k => `${k} = ?`).join(', ');
-  const core_values = [...Object.core_values(updates), req.user.id];
+  const values = [...Object.values(updates), req.user.id];
 
-  getDb().prepare(`UPDATE users SET ${sets} WHERE id = ?`).run(...core_values);
+  getDb().prepare(`UPDATE users SET ${sets} WHERE id = ?`).run(...values);
 
   const user = getDb().prepare(`
     SELECT id, email, name, avatar_url, bio, age, gender,
@@ -41,7 +41,6 @@ router.patch('/profile', requireAuth, [
     FROM users WHERE id = ?
   `).get(req.user.id);
 
-  // Parse JSON arrays back
   ['looking_for', 'interests', 'core_values'].forEach(k => {
     if (user[k]) { try { user[k] = JSON.parse(user[k]); } catch {} }
   });
@@ -63,7 +62,6 @@ router.get('/:id', requireAuth, (req, res) => {
     if (user[k]) { try { user[k] = JSON.parse(user[k]); } catch {} }
   });
 
-  // Attach matchmaker score
   const badges = db.prepare(`
     SELECT badge, matches_made FROM trust_badges WHERE user_id = ? ORDER BY matches_made DESC LIMIT 1
   `).get(req.params.id);
