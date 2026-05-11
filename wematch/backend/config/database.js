@@ -4,19 +4,26 @@ const path = require('path');
 const fs = require('fs');
 
 const DB_PATH = process.env.DB_PATH || './data/wematch.db';
-const dbDir = path.dirname(path.resolve(DB_PATH));
+const resolvedPath = path.resolve(DB_PATH);
+const dbDir = path.dirname(resolvedPath);
 
+let effectivePath = resolvedPath;
 if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch (e) {
+    console.warn(`[DB] Cannot create ${dbDir} (${e.message}). Falling back to local ./data/`);
+    const fallbackDir = path.join(__dirname, '../../data');
+    if (!fs.existsSync(fallbackDir)) fs.mkdirSync(fallbackDir, { recursive: true });
+    effectivePath = path.join(fallbackDir, 'wematch.db');
+  }
 }
 
 let db;
 
 function getDb() {
   if (!db) {
-    db = new Database(path.resolve(DB_PATH), {
-      verbose: process.env.NODE_ENV === 'development' ? null : null,
-    });
+    db = new Database(effectivePath, {});
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
   }
