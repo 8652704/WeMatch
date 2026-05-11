@@ -12,13 +12,13 @@ router.patch('/profile', requireAuth, [
   body('gender').optional().isIn(['man', 'woman', 'nonbinary', 'other']),
   body('looking_for').optional().isArray(),
   body('interests').optional().isArray(),
-  body('values').optional().isArray(),
+  body('core_values').optional().isArray(),
   body('location').optional().trim(),
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
-  const fields = ['name', 'bio', 'age', 'gender', 'looking_for', 'interests', 'values', 'location'];
+  const fields = ['name', 'bio', 'age', 'gender', 'looking_for', 'interests', 'core_values', 'location'];
   const updates = {};
 
   for (const f of fields) {
@@ -31,18 +31,18 @@ router.patch('/profile', requireAuth, [
 
   updates.updated_at = new Date().toISOString();
   const sets = Object.keys(updates).map(k => `${k} = ?`).join(', ');
-  const values = [...Object.values(updates), req.user.id];
+  const core_values = [...Object.core_values(updates), req.user.id];
 
-  getDb().prepare(`UPDATE users SET ${sets} WHERE id = ?`).run(...values);
+  getDb().prepare(`UPDATE users SET ${sets} WHERE id = ?`).run(...core_values);
 
   const user = getDb().prepare(`
     SELECT id, email, name, avatar_url, bio, age, gender,
-           looking_for, interests, values, location, updated_at
+           looking_for, interests, core_values, location, updated_at
     FROM users WHERE id = ?
   `).get(req.user.id);
 
   // Parse JSON arrays back
-  ['looking_for', 'interests', 'values'].forEach(k => {
+  ['looking_for', 'interests', 'core_values'].forEach(k => {
     if (user[k]) { try { user[k] = JSON.parse(user[k]); } catch {} }
   });
 
@@ -53,13 +53,13 @@ router.patch('/profile', requireAuth, [
 router.get('/:id', requireAuth, (req, res) => {
   const db = getDb();
   const user = db.prepare(`
-    SELECT id, name, avatar_url, bio, age, gender, interests, values, location
+    SELECT id, name, avatar_url, bio, age, gender, interests, core_values, location
     FROM users WHERE id = ? AND active = 1
   `).get(req.params.id);
 
   if (!user) return res.status(404).json({ error: 'User not found.' });
 
-  ['interests', 'values'].forEach(k => {
+  ['interests', 'core_values'].forEach(k => {
     if (user[k]) { try { user[k] = JSON.parse(user[k]); } catch {} }
   });
 
