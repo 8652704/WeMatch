@@ -101,6 +101,24 @@ db.exec(`
   );
 
   -- ─────────────────────────────────────────
+  --  CIRCLE INVITES  (email-based invitations)
+  -- ─────────────────────────────────────────
+  CREATE TABLE IF NOT EXISTS circle_invites (
+    id               TEXT PRIMARY KEY,
+    owner_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    invitee_name     TEXT NOT NULL,
+    invitee_email    TEXT NOT NULL,
+    token            TEXT NOT NULL UNIQUE,
+    joined           INTEGER DEFAULT 0,
+    opted_out        INTEGER DEFAULT 0,
+    last_reminder_at TEXT,
+    created_at       TEXT DEFAULT (datetime('now')),
+    UNIQUE(owner_id, invitee_email)
+  );
+
+
+
+  -- ─────────────────────────────────────────
   --  INDEXES
   -- ─────────────────────────────────────────
   CREATE INDEX IF NOT EXISTS idx_circles_owner    ON circles(owner_id);
