@@ -31,13 +31,16 @@ app.use((req, res, next) => {
 
 app.use(helmet({
   contentSecurityPolicy: {
+    useDefaults: false,
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
+      scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'fonts.gstatic.com'],
       fontSrc: ["'self'", 'fonts.gstatic.com'],
-            imgSrc:      ["'self'", 'data:', 'blob:'],
-      scriptSrcAttr: ["'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
     },
   },
   hsts: process.env.NODE_ENV === 'production'
