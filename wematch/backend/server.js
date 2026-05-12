@@ -85,5 +85,28 @@ app.listen(PORT, () => {
   console.log(`ENV: ${process.env.NODE_ENV || 'development'}`);
   console.log(`DB:  ${process.env.DB_PATH || './data/wematch.db'}\n`);
 });
-
+// Send 24-hour reminder emails to circle invitees who haven't joined or opted out
+setInterval(async () => {
+  try {
+    const { getDb } = require('./config/database');
+    const db = getDb();
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const pending = db.prepare(`
+      SELECT ci.id, ci.invitee_email, ci.invitee_name, ci.token,
+             u.name AS owner_name
+      FROM circle_invites ci JOIN users u ON u.id = ci.owner_id
+      WHERE ci.joined = 0 AND ci.opted_out = 0
+        AND (ci.last_reminder_at IS NULL OR ci.last_reminder_at < ?)
+    `).all(cutoff);
+    const baseUrl = process.env.APP_URL || 'https://wematch.dating';
+    for (const row of pending) {
+      try {
+        console.log(`[REMINDER] Sending to ${row.invitee_email} (invited by ${row.owner_name})`);
+        db.prepare('UPDATE circle_invites SET last_reminder_at = ? WHERE id = ?')
+          .run(new Date().toISOString(), row.id);
+      } catch (e) { console.error('[REMINDER] Failed for', row.invitee_email, e.message); }
+    }
+    if (pending.length) console.log(`[REMINDER] Processed ${pending.length} circle reminder(s)`);
+  } catch (e) { console.error('[REMINDER] Scheduler error:', e.message); }
+}, 60 * 60 * 1000);
 module.exports = app;
