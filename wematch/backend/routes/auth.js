@@ -114,7 +114,12 @@ router.get('/me', requireAuth, (req, res) => {
            looking_for, interests, core_values, location, created_at
     FROM users WHERE id = ?
   `).get(req.user.id);
-  res.json({ user });
+
+  const photos = db.prepare(
+    'SELECT photo_type, data_url FROM user_photos WHERE user_id = ?'
+  ).all(req.user.id).reduce((acc, p) => { acc[p.photo_type] = p.data_url; return acc; }, {});
+
+  res.json({ user: { ...user, photos } });
 });
 
 module.exports = router;

@@ -112,4 +112,32 @@ setInterval(async () => {
     if (pending.length) console.log(`[REMINDER] Processed ${pending.length} circle reminder(s)`);
   } catch (e) { console.error('[REMINDER] Scheduler error:', e.message); }
 }, 60 * 60 * 1000);
+
+// Send weekly reminders to users missing full-body or hobby photos
+setInterval(async () => {
+  try {
+    const { getDb } = require('./config/database');
+    const db = getDb();
+    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const users = db.prepare(`
+      SELECT u.id, u.email, u.name,
+        (SELECT COUNT(*) FROM user_photos WHERE user_id = u.id AND photo_type = 'fullbody') AS has_fullbody,
+        (SELECT COUNT(*) FROM user_photos WHERE user_id = u.id AND photo_type = 'hobby') AS has_hobby
+      FROM users u
+      WHERE u.active = 1
+        AND (u.photo_reminder_at IS NULL OR u.photo_reminder_at < ?)
+    `).all(cutoff);
+    let count = 0;
+    for (const u of users) {
+      if (u.has_fullbody && u.has_hobby) continue;
+      const missing = [!u.has_fullbody && 'full-body', !u.has_hobby && 'group/hobby'].filter(Boolean).join(' and ');
+      console.log(`[PHOTO REMINDER] Sending to ${u.email} — missing: ${missing}`);
+      db.prepare('UPDATE users SET photo_reminder_at = ? WHERE id = ?')
+        .run(new Date().toISOString(), u.id);
+      count++;
+    }
+    if (count) console.log(`[PHOTO REMINDER] Processed ${count} photo reminder(s)`);
+  } catch (e) { console.error('[PHOTO REMINDER] Scheduler error:', e.message); }
+}, 60 * 60 * 1000);
+
 module.exports = app;

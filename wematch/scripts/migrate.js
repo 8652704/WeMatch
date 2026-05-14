@@ -119,8 +119,21 @@ db.exec(`
 
 
   -- ─────────────────────────────────────────
+  --  USER PHOTOS
+  -- ─────────────────────────────────────────
+  CREATE TABLE IF NOT EXISTS user_photos (
+    id          TEXT PRIMARY KEY,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    photo_type  TEXT NOT NULL CHECK(photo_type IN ('headshot','fullbody','hobby')),
+    data_url    TEXT NOT NULL,
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_id, photo_type)
+  );
+
+  -- ─────────────────────────────────────────
   --  INDEXES
   -- ─────────────────────────────────────────
+  CREATE INDEX IF NOT EXISTS idx_user_photos_user ON user_photos(user_id);
   CREATE INDEX IF NOT EXISTS idx_circles_owner    ON circles(owner_id);
   CREATE INDEX IF NOT EXISTS idx_circles_member   ON circles(member_id);
   CREATE INDEX IF NOT EXISTS idx_referrals_recip  ON referrals(recipient_id);

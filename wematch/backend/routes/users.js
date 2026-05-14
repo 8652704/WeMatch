@@ -1,8 +1,40 @@
 // backend/routes/users.js
 const router = require('express').Router();
 const { body, validationResult } = require('express-validator');
+const { v4: uuid } = require('uuid');
 const { getDb } = require('../config/database');
 const { requireAuth } = require('../middleware/auth');
+
+const PHOTO_TYPES = ['headshot', 'fullbody', 'hobby'];
+const MAX_PHOTO_BYTES = 3_500_000; // ~2.5 MB base64
+
+// ── POST /users/photos — upload or replace a profile photo
+router.post('/photos', requireAuth, (req, res) => {
+  const { photo_type, data_url } = req.body;
+  if (!PHOTO_TYPES.includes(photo_type))
+    return res.status(422).json({ error: 'photo_type must be headshot, fullbody, or hobby.' });
+  if (!data_url || !data_url.startsWith('data:image/'))
+    return res.status(422).json({ error: 'Invalid image data.' });
+  if (data_url.length > MAX_PHOTO_BYTES)
+    return res.status(413).json({ error: 'Image too large. Please use an image under 2 MB.' });
+
+  const db = getDb();
+  db.prepare(`
+    INSERT INTO user_photos (id, user_id, photo_type, data_url) VALUES (?, ?, ?, ?)
+    ON CONFLICT(user_id, photo_type) DO UPDATE SET data_url = excluded.data_url, created_at = datetime('now')
+  `).run(uuid(), req.user.id, photo_type, data_url);
+
+  res.json({ message: 'Photo saved.' });
+});
+
+// ── DELETE /users/photos/:type — remove a profile photo
+router.delete('/photos/:type', requireAuth, (req, res) => {
+  if (!PHOTO_TYPES.includes(req.params.type))
+    return res.status(422).json({ error: 'Invalid photo type.' });
+  getDb().prepare('DELETE FROM user_photos WHERE user_id = ? AND photo_type = ?')
+    .run(req.user.id, req.params.type);
+  res.json({ message: 'Photo removed.' });
+});
 
 // ── PATCH /users/profile  — update own profile
 router.patch('/profile', requireAuth, [

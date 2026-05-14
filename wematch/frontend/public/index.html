@@ -604,6 +604,24 @@
   .stat-chip strong { display:block; font-family:'Sora',sans-serif; font-size:1.5rem; font-weight:700;
     background:linear-gradient(90deg,#F0607A,#C5A3F0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
   .stat-chip span { font-size:.78rem; color:rgba(255,255,255,.5); }
+  .photo-slot { width:160px; text-align:center; }
+  .photo-slot-label { font-size:.8rem; font-weight:600; color:rgba(255,255,255,.7); margin-bottom:.5rem; }
+  .photo-preview {
+    width:160px; height:160px; border-radius:14px; border:2px dashed rgba(255,255,255,.18);
+    background:rgba(255,255,255,.04); display:flex; flex-direction:column; align-items:center;
+    justify-content:center; cursor:pointer; overflow:hidden; transition:border-color .2s;
+  }
+  .photo-preview:hover { border-color:rgba(240,96,122,.5); }
+  .photo-preview img { width:100%; height:100%; object-fit:cover; border-radius:12px; }
+  .photo-upload-btn {
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:rgba(255,255,255,.7);
+    border-radius:8px; padding:.3rem .75rem; font-size:.75rem; cursor:pointer;
+  }
+  .photo-upload-btn:hover { background:rgba(255,255,255,.13); }
+  .photo-remove-btn {
+    background:rgba(240,96,122,.12); border:1px solid rgba(240,96,122,.25); color:#F0607A;
+    border-radius:8px; padding:.3rem .75rem; font-size:.75rem; cursor:pointer;
+  }
 </style>
 
 <!-- AUTH MODAL -->
@@ -632,6 +650,58 @@
       <div class="form-group"><label>Email</label><input type="email" id="signupEmail" placeholder="you@email.com" /></div>
       <div class="form-group"><label>Password</label><input type="password" id="signupPass" placeholder="Min. 8 characters" /></div>
       <button class="auth-btn" id="signupBtn" onclick="doSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO SETUP (shown after registration, requires headshot before dashboard) -->
+<div id="photoSetup" style="display:none;position:fixed;inset:0;background:rgba(10,10,15,.97);z-index:2000;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;">
+  <div style="max-width:560px;width:100%;padding-top:2rem;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:700;background:linear-gradient(135deg,#F0607A,#9B6FD4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem;">Almost there!</div>
+      <div style="color:rgba(255,255,255,.6);font-size:.95rem;">Add your photos to complete your profile. A headshot is required to continue.</div>
+    </div>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem;">
+      <div class="photo-slot" id="setup-slot-headshot">
+        <div class="photo-slot-label">Headshot <span style="color:#F0607A;">*Required</span></div>
+        <div class="photo-preview" id="setup-preview-headshot" onclick="setupUploadPhoto('headshot')">
+          <span style="font-size:2rem;opacity:.4;">📷</span>
+          <div style="font-size:.75rem;opacity:.5;margin-top:.4rem;">Click to upload</div>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:.6rem;justify-content:center;">
+          <button class="photo-upload-btn" onclick="setupUploadPhoto('headshot')">Upload</button>
+          <button class="photo-remove-btn" id="setup-remove-headshot" style="display:none;" onclick="setupRemovePhoto('headshot')">Remove</button>
+        </div>
+      </div>
+      <div class="photo-slot" id="setup-slot-fullbody">
+        <div class="photo-slot-label">Full Body <span style="color:#E8B84B;font-size:.75rem;">Recommended</span></div>
+        <div class="photo-preview" id="setup-preview-fullbody" onclick="setupUploadPhoto('fullbody')">
+          <span style="font-size:2rem;opacity:.4;">🧍</span>
+          <div style="font-size:.75rem;opacity:.5;margin-top:.4rem;">Click to upload</div>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:.6rem;justify-content:center;">
+          <button class="photo-upload-btn" onclick="setupUploadPhoto('fullbody')">Upload</button>
+          <button class="photo-remove-btn" id="setup-remove-fullbody" style="display:none;" onclick="setupRemovePhoto('fullbody')">Remove</button>
+        </div>
+      </div>
+      <div class="photo-slot" id="setup-slot-hobby">
+        <div class="photo-slot-label">Group / Hobby <span style="color:#E8B84B;font-size:.75rem;">Recommended</span></div>
+        <div class="photo-preview" id="setup-preview-hobby" onclick="setupUploadPhoto('hobby')">
+          <span style="font-size:2rem;opacity:.4;">🎉</span>
+          <div style="font-size:.75rem;opacity:.5;margin-top:.4rem;">Click to upload</div>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:.6rem;justify-content:center;">
+          <button class="photo-upload-btn" onclick="setupUploadPhoto('hobby')">Upload</button>
+          <button class="photo-remove-btn" id="setup-remove-hobby" style="display:none;" onclick="setupRemovePhoto('hobby')">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="setupPhotoMsg" style="text-align:center;font-size:.85rem;margin-bottom:1rem;display:none;"></div>
+    <div style="text-align:center;">
+      <button id="setupContinueBtn" onclick="completePhotoSetup()" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);border:none;color:#fff;padding:.75rem 2.5rem;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;opacity:.4;pointer-events:none;" disabled>Continue to WeMatch →</button>
+      <div style="margin-top:.75rem;font-size:.8rem;color:rgba(255,255,255,.35);">Full body and group/hobby photos are strongly recommended — you'll receive weekly reminders until they're added.</div>
     </div>
   </div>
 </div>
@@ -685,6 +755,54 @@
     <div class="dash-section" id="sectionProfile">
       <div class="dash-title">My Profile</div>
       <div class="stat-chips" id="profileStats"></div>
+
+      <!-- Photo banner (shown when photos missing) -->
+      <div id="photoBanner" style="display:none;background:linear-gradient(135deg,rgba(240,96,122,.15),rgba(155,111,212,.15));border:1px solid rgba(240,96,122,.35);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-width:560px;display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;">
+        <span style="font-size:1.4rem;">📸</span>
+        <div style="flex:1">
+          <div style="font-size:.9rem;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:.2rem;" id="photoBannerText"></div>
+          <div style="font-size:.8rem;color:rgba(255,255,255,.5);">Adding all 3 photos greatly improves your match quality.</div>
+        </div>
+        <button onclick="showSection('profile')" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);border:none;color:#fff;padding:.4rem 1rem;border-radius:8px;font-size:.8rem;cursor:pointer;white-space:nowrap;">Add Photos</button>
+      </div>
+
+      <!-- Photo upload slots -->
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.75rem;max-width:600px;">
+        <div class="photo-slot" id="slot-headshot">
+          <div class="photo-slot-label">Headshot <span style="color:#F0607A;">*Required</span></div>
+          <div class="photo-preview" id="preview-headshot" onclick="uploadPhoto('headshot')">
+            <span style="font-size:2rem;opacity:.4;">📷</span>
+            <div style="font-size:.75rem;opacity:.5;margin-top:.4rem;">Click to upload</div>
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.6rem;justify-content:center;">
+            <button class="photo-upload-btn" onclick="uploadPhoto('headshot')">Upload</button>
+            <button class="photo-remove-btn" id="remove-headshot" style="display:none;" onclick="removePhoto('headshot')">Remove</button>
+          </div>
+        </div>
+        <div class="photo-slot" id="slot-fullbody">
+          <div class="photo-slot-label">Full Body <span style="color:#E8B84B;font-size:.75rem;">Recommended</span></div>
+          <div class="photo-preview" id="preview-fullbody" onclick="uploadPhoto('fullbody')">
+            <span style="font-size:2rem;opacity:.4;">🧍</span>
+            <div style="font-size:.75rem;opacity:.5;margin-top:.4rem;">Click to upload</div>
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.6rem;justify-content:center;">
+            <button class="photo-upload-btn" onclick="uploadPhoto('fullbody')">Upload</button>
+            <button class="photo-remove-btn" id="remove-fullbody" style="display:none;" onclick="removePhoto('fullbody')">Remove</button>
+          </div>
+        </div>
+        <div class="photo-slot" id="slot-hobby">
+          <div class="photo-slot-label">Group / Hobby <span style="color:#E8B84B;font-size:.75rem;">Recommended</span></div>
+          <div class="photo-preview" id="preview-hobby" onclick="uploadPhoto('hobby')">
+            <span style="font-size:2rem;opacity:.4;">🎉</span>
+            <div style="font-size:.75rem;opacity:.5;margin-top:.4rem;">Click to upload</div>
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.6rem;justify-content:center;">
+            <button class="photo-upload-btn" onclick="uploadPhoto('hobby')">Upload</button>
+            <button class="photo-remove-btn" id="remove-hobby" style="display:none;" onclick="removePhoto('hobby')">Remove</button>
+          </div>
+        </div>
+      </div>
+
       <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.5rem;max-width:480px;">
         <div class="form-group"><label>Name</label><input type="text" id="profName" placeholder="Your name" /></div>
         <div class="form-group"><label>Bio (max 500 chars)</label><input type="text" id="profBio" placeholder="Tell people a bit about yourself..." /></div>
@@ -798,7 +916,7 @@ async function doSignup() {
     localStorage.setItem('wm_token', data.accessToken);
     localStorage.setItem('wm_refresh', data.refreshToken);
     closeModal();
-    showDashboard();
+    showPhotoSetup();
   } catch (err) {
     showAuthError(err.message);
   } finally {
@@ -820,6 +938,7 @@ async function doLogout() {
 //  Dashboard
 // ─────────────────────────────────────────────────
 async function showDashboard() {
+  document.getElementById('photoSetup').style.display = 'none';
   document.getElementById('dashboard').classList.add('open');
   loadFeed();
   loadMatches();
@@ -833,6 +952,7 @@ function showSection(name) {
     b.classList.toggle('active', ['feed','matches','circle','profile'][i] === name);
   });
   if (name === 'circle') loadCircle();
+  if (name === 'profile') loadProfilePhotos();
 }
 
 function initials(name) {
@@ -979,6 +1099,9 @@ async function loadProfile() {
     document.getElementById('profAge').value       = user.age || '';
     document.getElementById('profLocation').value  = user.location || '';
     document.getElementById('profInterests').value = Array.isArray(user.interests) ? user.interests.join(', ') : (user.interests || '');
+    _currentPhotos = user.photos || {};
+    renderPhotoSlots('', _currentPhotos);
+    updatePhotoBanner(_currentPhotos);
   } catch {}
 }
 
@@ -996,6 +1119,135 @@ async function saveProfile() {
     msg.textContent = '✓ Profile saved!'; msg.style.display = 'block';
     setTimeout(() => msg.style.display = 'none', 3000);
   } catch (err) { alert(err.message); }
+}
+
+// ─────────────────────────────────────────────────
+//  Photo management
+// ─────────────────────────────────────────────────
+let _currentPhotos = {};
+
+async function loadProfilePhotos() {
+  try {
+    const { user } = await API.get('/auth/me');
+    _currentPhotos = user.photos || {};
+    renderPhotoSlots('', _currentPhotos);
+    updatePhotoBanner(_currentPhotos);
+  } catch {}
+}
+
+function renderPhotoSlots(prefix, photos) {
+  ['headshot','fullbody','hobby'].forEach(type => {
+    const preview = document.getElementById(`${prefix}preview-${type}`);
+    const removeBtn = document.getElementById(`${prefix}remove-${type}`);
+    if (!preview) return;
+    if (photos[type]) {
+      preview.innerHTML = `<img src="${photos[type]}" alt="${type}" />`;
+      if (removeBtn) removeBtn.style.display = 'inline-block';
+    } else {
+      const icons = { headshot:'📷', fullbody:'🧍', hobby:'🎉' };
+      preview.innerHTML = `<span style="font-size:2rem;opacity:.4;">${icons[type]}</span><div style="font-size:.75rem;opacity:.5;margin-top:.4rem;">Click to upload</div>`;
+      if (removeBtn) removeBtn.style.display = 'none';
+    }
+  });
+}
+
+function updatePhotoBanner(photos) {
+  const banner = document.getElementById('photoBanner');
+  if (!banner) return;
+  const missing = [!photos.fullbody && 'full body', !photos.hobby && 'group/hobby'].filter(Boolean);
+  if (missing.length) {
+    document.getElementById('photoBannerText').textContent = `Add your ${missing.join(' and ')} photo${missing.length > 1 ? 's' : ''} to improve your matches`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function uploadPhoto(type) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 2.5 * 1024 * 1024) { alert('Please choose an image under 2.5 MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        await API.post('/users/photos', { photo_type: type, data_url: e.target.result });
+        _currentPhotos[type] = e.target.result;
+        renderPhotoSlots('', _currentPhotos);
+        updatePhotoBanner(_currentPhotos);
+      } catch (err) { alert(err.message || 'Upload failed.'); }
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+async function removePhoto(type) {
+  if (!confirm('Remove this photo?')) return;
+  try {
+    await API.delete('/users/photos/' + type);
+    delete _currentPhotos[type];
+    renderPhotoSlots('', _currentPhotos);
+    updatePhotoBanner(_currentPhotos);
+  } catch (err) { alert(err.message); }
+}
+
+// ── Photo setup (after registration) ──
+let _setupPhotos = {};
+
+function showPhotoSetup() {
+  _setupPhotos = {};
+  renderPhotoSlots('setup-', _setupPhotos);
+  document.getElementById('setupPhotoMsg').style.display = 'none';
+  document.getElementById('photoSetup').style.display = 'flex';
+}
+
+function setupUploadPhoto(type) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 2.5 * 1024 * 1024) { alert('Please choose an image under 2.5 MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        await API.post('/users/photos', { photo_type: type, data_url: e.target.result });
+        _setupPhotos[type] = e.target.result;
+        renderPhotoSlots('setup-', _setupPhotos);
+        const btn = document.getElementById('setupContinueBtn');
+        if (_setupPhotos.headshot) {
+          btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.disabled = false;
+        }
+      } catch (err) { alert(err.message || 'Upload failed.'); }
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+async function setupRemovePhoto(type) {
+  try {
+    await API.delete('/users/photos/' + type);
+    delete _setupPhotos[type];
+    renderPhotoSlots('setup-', _setupPhotos);
+    if (type === 'headshot') {
+      const btn = document.getElementById('setupContinueBtn');
+      btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none'; btn.disabled = true;
+    }
+  } catch (err) { alert(err.message); }
+}
+
+function completePhotoSetup() {
+  if (!_setupPhotos.headshot) {
+    const msg = document.getElementById('setupPhotoMsg');
+    msg.textContent = 'A headshot is required to continue.';
+    msg.style.color = '#F0607A'; msg.style.display = 'block';
+    return;
+  }
+  showDashboard();
 }
 
 // Auto-login if token exists
