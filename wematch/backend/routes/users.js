@@ -80,17 +80,49 @@ router.patch('/profile', requireAuth, [
   res.json({ user });
 });
 
+// ── GET /users/browse — filter-based profile search
+router.get('/browse', requireAuth, (req, res) => {
+  const { gender, location, interests } = req.query;
+  const db = getDb();
+
+  let sql = `
+    SELECT u.id, u.name, u.bio, u.age, u.gender, u.location, u.looking_for, u.interests,
+      (SELECT data_url FROM user_photos WHERE user_id = u.id AND photo_type = 'headshot' LIMIT 1) AS headshot
+    FROM users u
+    WHERE u.active = 1 AND u.id != ?
+  `;
+  const params = [req.user.id];
+
+  if (gender) { sql += ' AND u.gender = ?'; params.push(gender); }
+  if (location) { sql += ' AND u.location LIKE ?'; params.push(`%${location}%`); }
+  if (interests) {
+    const terms = interests.split(',').map(s => s.trim()).filter(Boolean);
+    terms.forEach(t => { sql += ' AND u.interests LIKE ?'; params.push(`%${t}%`); });
+  }
+
+  sql += ' ORDER BY u.created_at DESC LIMIT 40';
+
+  const users = db.prepare(sql).all(...params);
+  users.forEach(u => {
+    ['looking_for', 'interests'].forEach(k => {
+      if (u[k]) { try { u[k] = JSON.parse(u[k]); } catch {} }
+    });
+  });
+
+  res.json({ users });
+});
+
 // ── GET /users/:id  — public profile
 router.get('/:id', requireAuth, (req, res) => {
   const db = getDb();
   const user = db.prepare(`
-    SELECT id, name, avatar_url, bio, age, gender, interests, core_values, location
+    SELECT id, name, avatar_url, bio, age, gender, interests, core_values, location, looking_for
     FROM users WHERE id = ? AND active = 1
   `).get(req.params.id);
 
   if (!user) return res.status(404).json({ error: 'User not found.' });
 
-  ['interests', 'core_values'].forEach(k => {
+  ['interests', 'core_values', 'looking_for'].forEach(k => {
     if (user[k]) { try { user[k] = JSON.parse(user[k]); } catch {} }
   });
 
@@ -98,10 +130,14 @@ router.get('/:id', requireAuth, (req, res) => {
     SELECT badge, matches_made FROM trust_badges WHERE user_id = ? ORDER BY matches_made DESC LIMIT 1
   `).get(req.params.id);
 
-  res.json({ user: { ...user, trust_badge: badges || null } });
+  const photos = db.prepare(
+    'SELECT photo_type, data_url FROM user_photos WHERE user_id = ?'
+  ).all(req.params.id).reduce((acc, p) => { acc[p.photo_type] = p.data_url; return acc; }, {});
+
+  res.json({ user: { ...user, trust_badge: badges || null, photos } });
 });
 
-// ── GET /users/search?q=name  — search for people to add to circle
+// ── GET /users — name search (for circle invite)
 router.get('/', requireAuth, (req, res) => {
   const q = (req.query.q || '').trim();
   if (q.length < 2) return res.status(400).json({ error: 'Query must be at least 2 characters.' });

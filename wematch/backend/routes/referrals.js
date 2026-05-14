@@ -83,10 +83,35 @@ router.post('/', requireAuth, [
   const id = uuid();
   db.prepare(`
     INSERT INTO referrals (id, referrer_id, recipient_id, candidate_id, note)
-    core_values (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?)
   `).run(id, req.user.id, recipient_id, candidate_id, note || null);
 
   res.status(201).json({ message: 'Referral sent!', referral_id: id });
+});
+
+// ── POST /referrals/interest/:candidateId — express interest from search
+router.post('/interest/:candidateId', requireAuth, (req, res) => {
+  const { candidateId } = req.params;
+  const db = getDb();
+
+  const candidate = db.prepare('SELECT id, name FROM users WHERE id = ? AND active = 1').get(candidateId);
+  if (!candidate) return res.status(404).json({ error: 'Profile not found.' });
+  if (candidateId === req.user.id) return res.status(400).json({ error: 'You cannot express interest in yourself.' });
+
+  // Prevent duplicates
+  const dup = db.prepare(`
+    SELECT id FROM referrals
+    WHERE referrer_id = ? AND recipient_id = ? AND candidate_id = ? AND status = 'pending'
+  `).get(req.user.id, req.user.id, candidateId);
+  if (dup) return res.status(409).json({ error: 'You have already expressed interest in this person.' });
+
+  const id = uuid();
+  db.prepare(`
+    INSERT INTO referrals (id, referrer_id, recipient_id, candidate_id, note)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(id, req.user.id, req.user.id, candidateId, 'Found via Search');
+
+  res.status(201).json({ message: `Interest in ${candidate.name} added to your Referral Feed.`, referral_id: id });
 });
 
 // ── POST /referrals/:id/accept
@@ -113,7 +138,7 @@ router.post('/:id/accept', requireAuth, (req, res) => {
     const existingMatch = db.prepare('SELECT id FROM matches WHERE user_a_id = ? AND user_b_id = ?').get(a, b);
     if (!existingMatch) {
       const matchId = uuid();
-      db.prepare('INSERT INTO matches (id, user_a_id, user_b_id, referral_id) core_values (?, ?, ?, ?)')
+      db.prepare('INSERT INTO matches (id, user_a_id, user_b_id, referral_id) VALUES (?, ?, ?, ?)')
         .run(matchId, a, b, referral.id);
 
       // Update referral status + update matchmaker badge
@@ -161,7 +186,7 @@ function _updateMatchmakerBadge(db, userId) {
       db.prepare('UPDATE trust_badges SET badge = ?, matches_made = ? WHERE user_id = ?')
         .run(badge, total, userId);
     } else {
-      db.prepare('INSERT INTO trust_badges (id, user_id, badge, matches_made) core_values (?, ?, ?, ?)')
+      db.prepare('INSERT INTO trust_badges (id, user_id, badge, matches_made) VALUES (?, ?, ?, ?)')
         .run(uuid(), userId, badge, total);
     }
   }
