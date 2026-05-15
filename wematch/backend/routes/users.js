@@ -90,6 +90,7 @@ router.get('/browse', requireAuth, (req, res) => {
       (SELECT data_url FROM user_photos WHERE user_id = u.id AND photo_type = 'headshot' LIMIT 1) AS headshot
     FROM users u
     WHERE u.active = 1 AND u.id != ?
+      AND EXISTS (SELECT 1 FROM user_photos WHERE user_id = u.id AND photo_type = 'headshot')
   `;
   const params = [req.user.id];
 
