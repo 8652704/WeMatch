@@ -649,6 +649,16 @@
       <div class="form-group"><label>Full Name</label><input type="text" id="signupName" placeholder="Your name" /></div>
       <div class="form-group"><label>Email</label><input type="email" id="signupEmail" placeholder="you@email.com" /></div>
       <div class="form-group"><label>Password</label><input type="password" id="signupPass" placeholder="Min. 8 characters" /></div>
+      <div class="form-group"><label>I identify as</label>
+        <select id="signupGender" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.6rem .85rem;color:#fff;font-size:.9rem;">
+          <option value="">Select gender…</option>
+          <option value="man">Man</option>
+          <option value="woman">Woman</option>
+          <option value="nonbinary">Non-binary</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Location</label><input type="text" id="signupLocation" placeholder="City, Country" /></div>
       <button class="auth-btn" id="signupBtn" onclick="doSignup()">Create Account</button>
     </div>
   </div>
@@ -982,6 +992,15 @@ async function doSignup() {
     API.token = data.accessToken;
     localStorage.setItem('wm_token', data.accessToken);
     localStorage.setItem('wm_refresh', data.refreshToken);
+    // Save gender and location immediately if provided
+    const gender   = document.getElementById('signupGender').value;
+    const location = document.getElementById('signupLocation').value.trim();
+    if (gender || location) {
+      const profileUpdate = {};
+      if (gender)   profileUpdate.gender   = gender;
+      if (location) profileUpdate.location = location;
+      try { await API.patch('/users/profile', profileUpdate); } catch {}
+    }
     closeModal();
     showPhotoSetup();
   } catch (err) {
@@ -1310,6 +1329,14 @@ function showPhotoSetup() {
   _setupPhotos = {};
   renderPhotoSlots('setup-', _setupPhotos);
   document.getElementById('setupPhotoMsg').style.display = 'none';
+  document.getElementById('setupProfileStep').style.display = 'none';
+  const btn = document.getElementById('setupContinueBtn');
+  btn.style.display = ''; btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; btn.disabled = true;
+  // Pre-fill step 2 with values already entered at signup
+  const g = document.getElementById('signupGender')?.value;
+  const l = document.getElementById('signupLocation')?.value;
+  if (g) { const sel = document.getElementById('setupGender'); if (sel) sel.value = g; }
+  if (l) { const inp = document.getElementById('setupLocation'); if (inp) inp.value = l; }
   document.getElementById('photoSetup').style.display = 'flex';
 }
 
