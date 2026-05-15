@@ -622,6 +622,32 @@
     background:rgba(240,96,122,.12); border:1px solid rgba(240,96,122,.25); color:#F0607A;
     border-radius:8px; padding:.3rem .75rem; font-size:.75rem; cursor:pointer;
   }
+  .profile-nav-wrap { position:relative; }
+  .profile-dropdown-menu {
+    display:none; position:absolute; top:calc(100% + 6px); right:0;
+    background:#1A2155; border:1px solid rgba(255,255,255,.12); border-radius:12px;
+    padding:.4rem; min-width:160px; z-index:500; box-shadow:0 8px 32px rgba(0,0,0,.4);
+  }
+  .profile-dropdown-menu.open { display:block; }
+  .profile-dropdown-menu button {
+    display:block; width:100%; text-align:left; background:transparent;
+    border:none; color:rgba(255,255,255,.8); padding:.55rem .85rem; border-radius:8px;
+    font-size:.85rem; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .profile-dropdown-menu button:hover { background:rgba(255,255,255,.07); color:#fff; }
+  .profile-view-card {
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+    border-radius:20px; padding:1.75rem; max-width:540px;
+  }
+  .profile-view-headshot {
+    width:120px; height:120px; border-radius:50%; object-fit:cover;
+    border:3px solid rgba(240,96,122,.4); display:block; margin:0 auto 1.25rem;
+  }
+  .profile-view-avatar {
+    width:120px; height:120px; border-radius:50%; background:var(--grad-1);
+    display:flex; align-items:center; justify-content:center;
+    font-size:2.5rem; font-weight:700; margin:0 auto 1.25rem;
+  }
 </style>
 
 <!-- AUTH MODAL -->
@@ -763,13 +789,19 @@
   <div class="dash-header">
     <div class="modal-logo-text" onclick="goHome()" style="font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;" title="Back to home">WeMatch</div>
     <div class="dash-nav">
-      <button class="dash-nav-btn active" onclick="showSection('feed')">✉ Referral Feed</button>
-      <button class="dash-nav-btn"        onclick="showSection('matches')">💬 Matches</button>
-      <button class="dash-nav-btn"        onclick="showSection('search')">🔍 Search</button>
-      <button class="dash-nav-btn"        onclick="showSection('circle')">🔵 My Circle</button>
-      <button class="dash-nav-btn"        onclick="showSection('profile')">👤 Profile</button>
+      <button class="dash-nav-btn active" data-section="feed"    onclick="showSection('feed')">✉ Referral Feed</button>
+      <button class="dash-nav-btn"        data-section="matches" onclick="showSection('matches')">💬 Matches</button>
+      <button class="dash-nav-btn"        data-section="search"  onclick="showSection('search')">🔍 Search</button>
+      <button class="dash-nav-btn"        data-section="circle"  onclick="showSection('circle')">🔵 My Circle</button>
+      <div class="profile-nav-wrap" id="profileNavWrap">
+        <button class="dash-nav-btn" data-section="profile" onclick="toggleProfileDropdown()">👤 Profile ▾</button>
+        <div id="profileDropdownMenu" class="profile-dropdown-menu">
+          <button onclick="closeProfileDropdown();showSection('editprofile')">✏️ Edit Profile</button>
+          <button onclick="closeProfileDropdown();showSection('settings')">⚙️ Settings</button>
+          <button onclick="closeProfileDropdown();doLogout()">🚪 Log Out</button>
+        </div>
+      </div>
     </div>
-    <button class="dash-logout" onclick="doLogout()">Sign Out</button>
   </div>
   <div class="dash-body">
 
@@ -833,19 +865,25 @@
     </div>
     
 
-    <!-- PROFILE -->
+    <!-- PROFILE VIEW (landing) -->
     <div class="dash-section" id="sectionProfile">
-      <div class="dash-title">My Profile</div>
-      <div class="stat-chips" id="profileStats"></div>
+      <div id="profileViewCard" style="max-width:560px;">
+        <!-- Rendered by renderProfileView() -->
+      </div>
+    </div>
 
-      <!-- Photo banner (shown when photos missing) -->
-      <div id="photoBanner" style="display:none;background:linear-gradient(135deg,rgba(240,96,122,.15),rgba(155,111,212,.15));border:1px solid rgba(240,96,122,.35);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-width:560px;display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;">
+    <!-- EDIT PROFILE (from dropdown) -->
+    <div class="dash-section" id="sectionEditprofile">
+      <div class="dash-title" style="display:flex;align-items:center;gap:.75rem;">
+        <button onclick="showSection('profile')" style="background:rgba(255,255,255,.07);border:none;color:rgba(255,255,255,.6);padding:.3rem .7rem;border-radius:8px;font-size:.8rem;cursor:pointer;">← Back</button>
+        Edit Profile
+      </div>
+
+      <!-- Photo banner -->
+      <div id="photoBanner" style="display:none;background:linear-gradient(135deg,rgba(240,96,122,.15),rgba(155,111,212,.15));border:1px solid rgba(240,96,122,.35);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-width:560px;align-items:center;gap:.85rem;flex-wrap:wrap;">
         <span style="font-size:1.4rem;">📸</span>
-        <div style="flex:1">
-          <div style="font-size:.9rem;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:.2rem;" id="photoBannerText"></div>
-          <div style="font-size:.8rem;color:rgba(255,255,255,.5);">Adding all 3 photos greatly improves your match quality.</div>
-        </div>
-        <button onclick="showSection('profile')" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);border:none;color:#fff;padding:.4rem 1rem;border-radius:8px;font-size:.8rem;cursor:pointer;white-space:nowrap;">Add Photos</button>
+        <div style="flex:1"><div style="font-size:.9rem;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:.2rem;" id="photoBannerText"></div>
+          <div style="font-size:.8rem;color:rgba(255,255,255,.5);">Adding all 3 photos greatly improves your match quality.</div></div>
       </div>
 
       <!-- Photo upload slots -->
@@ -890,10 +928,39 @@
         <div class="form-group"><label>Name</label><input type="text" id="profName" placeholder="Your name" /></div>
         <div class="form-group"><label>Bio (max 500 chars)</label><input type="text" id="profBio" placeholder="Tell people a bit about yourself..." /></div>
         <div class="form-group"><label>Age</label><input type="number" id="profAge" placeholder="25" min="18" max="100" /></div>
+        <div class="form-group"><label>I identify as</label>
+          <select id="profGender" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.6rem .85rem;color:#fff;font-size:.9rem;">
+            <option value="">Select…</option>
+            <option value="man">Man</option>
+            <option value="woman">Woman</option>
+            <option value="nonbinary">Non-binary</option>
+            <option value="other">Other</option>
+          </select></div>
         <div class="form-group"><label>Location</label><input type="text" id="profLocation" placeholder="City, Country" /></div>
         <div class="form-group"><label>Interests (comma-separated)</label><input type="text" id="profInterests" placeholder="hiking, coffee, travel" /></div>
         <button class="auth-btn" style="margin-top:.5rem;" onclick="saveProfile()">Save Profile</button>
         <div id="profileMsg" style="margin-top:.75rem;font-size:.82rem;color:#C5A3F0;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="dash-section" id="sectionSettings">
+      <div class="dash-title">Settings</div>
+      <div style="max-width:480px;display:flex;flex-direction:column;gap:.75rem;">
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.25rem;">
+          <div style="font-weight:600;font-size:.95rem;margin-bottom:.35rem;">Notifications</div>
+          <div style="font-size:.85rem;color:rgba(255,255,255,.45);">Email reminders for circle invites and referrals are sent automatically.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.25rem;">
+          <div style="font-weight:600;font-size:.95rem;margin-bottom:.35rem;">Subscription</div>
+          <div style="font-size:.85rem;color:rgba(255,255,255,.45);margin-bottom:.75rem;">Upgrade to Pro for unlimited circle members, boosted referrals, and more.</div>
+          <button onclick="subscribe('pro')" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);border:none;color:#fff;padding:.5rem 1.25rem;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;">Upgrade to Pro</button>
+        </div>
+        <div style="background:rgba(240,96,122,.06);border:1px solid rgba(240,96,122,.2);border-radius:16px;padding:1.25rem;">
+          <div style="font-weight:600;font-size:.95rem;margin-bottom:.35rem;color:#F0607A;">Log Out</div>
+          <div style="font-size:.85rem;color:rgba(255,255,255,.45);margin-bottom:.75rem;">You will be returned to the home page.</div>
+          <button onclick="doLogout()" style="background:rgba(240,96,122,.15);border:1px solid rgba(240,96,122,.3);color:#F0607A;padding:.5rem 1.25rem;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;">Sign Out</button>
+        </div>
       </div>
     </div>
 
@@ -1035,23 +1102,70 @@ function goHome() {
 // ─────────────────────────────────────────────────
 //  Dashboard
 // ─────────────────────────────────────────────────
-async function showDashboard() {
+async function showDashboard(startSection) {
   document.getElementById('photoSetup').style.display = 'none';
   document.getElementById('dashboard').classList.add('open');
   loadFeed();
   loadMatches();
-  loadProfile();
+  showSection(startSection || 'feed');
+  if (!startSection || startSection === 'feed') loadProfile();
 }
 
 function showSection(name) {
   document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('section' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
-  document.querySelectorAll('.dash-nav-btn').forEach((b, i) => {
-    b.classList.toggle('active', ['feed','matches','search','circle','profile'][i] === name);
+  const sectionId = 'section' + name.charAt(0).toUpperCase() + name.slice(1);
+  const el = document.getElementById(sectionId);
+  if (el) el.classList.add('active');
+  // Active state: profile/editprofile/settings all highlight the Profile button
+  const profileGroup = ['profile','editprofile','settings'];
+  document.querySelectorAll('.dash-nav-btn[data-section]').forEach(b => {
+    const sec = b.getAttribute('data-section');
+    const isActive = sec === name || (profileGroup.includes(name) && sec === 'profile');
+    b.classList.toggle('active', isActive);
   });
   if (name === 'circle') loadCircle();
-  if (name === 'profile') loadProfilePhotos();
+  if (name === 'editprofile') loadProfilePhotos();
+  if (name === 'profile') { loadProfile(); }
   if (name === 'search') searchProfiles();
+}
+
+function toggleProfileDropdown() {
+  document.getElementById('profileDropdownMenu').classList.toggle('open');
+}
+function closeProfileDropdown() {
+  document.getElementById('profileDropdownMenu').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('profileNavWrap');
+  if (wrap && !wrap.contains(e.target)) closeProfileDropdown();
+});
+
+function renderProfileView(user, photos) {
+  const card = document.getElementById('profileViewCard');
+  if (!card) return;
+  const p = photos || {};
+  const genderLabel = { man:'Man', woman:'Woman', nonbinary:'Non-binary', other:'Other' };
+  const interests = Array.isArray(user.interests) ? user.interests : [];
+  const lookingFor = Array.isArray(user.looking_for) ? user.looking_for : [];
+  const otherPhotos = ['fullbody','hobby'].filter(t => p[t]);
+
+  card.innerHTML = `
+    <div class="profile-view-card">
+      ${p.headshot
+        ? `<img class="profile-view-headshot" src="${p.headshot}" alt="Headshot" />`
+        : `<div class="profile-view-avatar">${initials(user.name)}</div>`}
+      <div style="text-align:center;margin-bottom:1.25rem;">
+        <h2 style="font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:.25rem;">${user.name || ''}${user.age ? ', ' + user.age : ''}</h2>
+        ${user.gender ? `<span style="font-size:.82rem;background:rgba(240,96,122,.12);border:1px solid rgba(240,96,122,.25);color:#F0A0B0;border-radius:100px;padding:.2rem .75rem;">${genderLabel[user.gender] || user.gender}</span>` : ''}
+        ${user.location ? `<p style="color:rgba(255,255,255,.45);font-size:.85rem;margin-top:.5rem;">📍 ${user.location}</p>` : ''}
+      </div>
+      ${user.bio ? `<p style="color:rgba(255,255,255,.7);font-size:.9rem;line-height:1.65;text-align:center;margin-bottom:1.25rem;">${user.bio}</p>` : ''}
+      ${interests.length ? `<div style="display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.25rem;">${interests.map(i=>`<span style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.25rem .6rem;font-size:.78rem;">${i}</span>`).join('')}</div>` : ''}
+      ${lookingFor.length ? `<p style="font-size:.82rem;color:rgba(255,255,255,.4);text-align:center;margin-bottom:1.25rem;">Looking for: ${lookingFor.join(', ')}</p>` : ''}
+      ${otherPhotos.length ? `<div style="display:flex;gap:.75rem;justify-content:center;margin-bottom:1.25rem;">${otherPhotos.map(t=>`<img src="${p[t]}" style="height:140px;border-radius:14px;object-fit:cover;max-width:48%;" />`).join('')}</div>` : ''}
+      <button onclick="showSection('editprofile')" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75);border-radius:12px;padding:.65rem;font-size:.88rem;font-weight:600;cursor:pointer;margin-top:.25rem;">✏️ Edit Profile</button>
+    </div>
+  `;
 }
 
 function initials(name) {
@@ -1193,14 +1307,16 @@ async function removeCircleMember(id) {
 async function loadProfile() {
   try {
     const { user } = await API.get('/auth/me');
+    // Fill edit form fields
     document.getElementById('profName').value      = user.name || '';
     document.getElementById('profBio').value       = user.bio || '';
     document.getElementById('profAge').value       = user.age || '';
     document.getElementById('profLocation').value  = user.location || '';
     document.getElementById('profInterests').value = Array.isArray(user.interests) ? user.interests.join(', ') : (user.interests || '');
+    const profGender = document.getElementById('profGender');
+    if (profGender) profGender.value = user.gender || '';
     _currentPhotos = user.photos || {};
-    renderPhotoSlots('', _currentPhotos);
-    updatePhotoBanner(_currentPhotos);
+    renderProfileView(user, _currentPhotos);
   } catch {}
 }
 
@@ -1209,6 +1325,7 @@ async function saveProfile() {
     name:      document.getElementById('profName').value,
     bio:       document.getElementById('profBio').value,
     age:       parseInt(document.getElementById('profAge').value) || undefined,
+    gender:    document.getElementById('profGender').value || undefined,
     location:  document.getElementById('profLocation').value,
     interests: document.getElementById('profInterests').value.split(',').map(s => s.trim()).filter(Boolean),
   };
@@ -1216,7 +1333,7 @@ async function saveProfile() {
     await API.patch('/users/profile', body);
     const msg = document.getElementById('profileMsg');
     msg.textContent = '✓ Profile saved!'; msg.style.display = 'block';
-    setTimeout(() => msg.style.display = 'none', 3000);
+    setTimeout(() => { msg.style.display = 'none'; showSection('profile'); }, 2000);
   } catch (err) { alert(err.message); }
 }
 
@@ -1231,6 +1348,7 @@ async function loadProfilePhotos() {
     _currentPhotos = user.photos || {};
     renderPhotoSlots('', _currentPhotos);
     updatePhotoBanner(_currentPhotos);
+    renderProfileView(user, _currentPhotos);
   } catch {}
 }
 
@@ -1402,12 +1520,11 @@ async function saveSetupProfile() {
   const msg = document.getElementById('setupProfileMsg');
   try {
     await API.patch('/users/profile', body);
-    showDashboard();
+    await showDashboard('profile');
   } catch (err) {
     msg.textContent = err.message || 'Failed to save profile. You can update it later in the Profile tab.';
     msg.style.color = '#F0607A'; msg.style.display = 'block';
-    // Still allow them to proceed
-    setTimeout(showDashboard, 2000);
+    setTimeout(() => showDashboard('profile'), 2000);
   }
 }
 
