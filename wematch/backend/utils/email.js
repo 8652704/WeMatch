@@ -8,16 +8,34 @@ function createTransport() {
     port: parseInt(SMTP_PORT) || 587,
     secure: parseInt(SMTP_PORT) === 465,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
+    tls: { rejectUnauthorized: false },
   });
 }
 
 const FROM = () => process.env.EMAIL_FROM || `WeMatch <${process.env.SMTP_USER}>`;
 
+async function verifyTransport() {
+  const transport = createTransport();
+  if (!transport) return { ok: false, error: 'SMTP env vars not configured (SMTP_HOST, SMTP_USER, SMTP_PASS required)' };
+  try {
+    await transport.verify();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function sendEmail({ to, subject, html, text }) {
+  const transport = createTransport();
+  if (!transport) throw new Error('SMTP not configured');
+  await transport.sendMail({ from: FROM(), to, subject, html, text });
+}
+
 async function sendCircleWelcomeEmail(toEmail, toName, ownerName, baseUrl, optOutUrl) {
   const transport = createTransport();
   if (!transport) {
-    console.log(`[EMAIL] No SMTP configured — skipping welcome email to ${toEmail}`);
-    return;
+    console.warn(`[EMAIL] No SMTP configured — skipping welcome email to ${toEmail}`);
+    return { skipped: true };
   }
   await transport.sendMail({
     from: FROM(),
@@ -38,12 +56,13 @@ async function sendCircleWelcomeEmail(toEmail, toName, ownerName, baseUrl, optOu
     text: `Hi ${toName},\n\n${ownerName} has invited you to join their WeMatch circle.\n\nSign up at: ${baseUrl}\n\nOpt out: ${optOutUrl}`,
   });
   console.log(`[EMAIL] Circle welcome sent to ${toEmail}`);
+  return { sent: true };
 }
 
 async function sendCircleReminderEmail(toEmail, toName, ownerName, baseUrl, optOutUrl) {
   const transport = createTransport();
   if (!transport) {
-    console.log(`[EMAIL] No SMTP configured — skipping reminder email to ${toEmail}`);
+    console.warn(`[EMAIL] No SMTP configured — skipping reminder email to ${toEmail}`);
     return;
   }
   await transport.sendMail({
@@ -66,4 +85,4 @@ async function sendCircleReminderEmail(toEmail, toName, ownerName, baseUrl, optO
   console.log(`[EMAIL] Circle reminder sent to ${toEmail}`);
 }
 
-module.exports = { sendCircleWelcomeEmail, sendCircleReminderEmail };
+module.exports = { sendCircleWelcomeEmail, sendCircleReminderEmail, verifyTransport, sendEmail };

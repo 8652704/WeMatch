@@ -28,7 +28,7 @@ router.get('/', requireAuth, (req, res) => {
 
 router.post('/invite', requireAuth, [
   body('name').trim().isLength({ min: 2 }).withMessage('Name is required.'),
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required.'),
+  body('email').isEmail().withMessage('Valid email is required.'),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
@@ -58,10 +58,18 @@ router.post('/invite', requireAuth, [
       db.prepare('UPDATE circle_invites SET joined = 1 WHERE id = ?').run(id);
     } catch {}
   }
+  let emailError = null;
   try {
     await sendCircleWelcomeEmail(email, name, owner.name, baseUrl, `${baseUrl}/?optout=${token}`);
-  } catch (e) { console.error('[EMAIL] Circle welcome failed:', e.message); }
-  res.status(201).json({ message: `Invite sent to ${name}!`, invite_id: id });
+  } catch (e) {
+    emailError = e.message;
+    console.error('[EMAIL] Circle welcome failed:', e.message);
+  }
+  res.status(201).json({
+    message: `Invite sent to ${name}!`,
+    invite_id: id,
+    ...(emailError && { email_warning: `Invite saved but email delivery failed: ${emailError}` }),
+  });
 });
 
 router.delete('/invite/:id', requireAuth, (req, res) => {

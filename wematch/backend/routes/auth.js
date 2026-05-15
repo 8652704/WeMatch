@@ -1,4 +1,3 @@
-// backend/routes/auth.js
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -6,6 +5,7 @@ const { v4: uuid } = require('uuid');
 const { body, validationResult } = require('express-validator');
 const { getDb } = require('../config/database');
 const { requireAuth } = require('../middleware/auth');
+const { verifyTransport, sendEmail } = require('../utils/email');
 
 const SALT_ROUNDS = 12;
 
@@ -120,6 +120,25 @@ router.get('/me', requireAuth, (req, res) => {
   ).all(req.user.id).reduce((acc, p) => { acc[p.photo_type] = p.data_url; return acc; }, {});
 
   res.json({ user: { ...user, photos } });
+});
+
+// ── GET /auth/test-email  — verify SMTP config and send a test to yourself
+router.get('/test-email', requireAuth, async (req, res) => {
+  const check = await verifyTransport();
+  if (!check.ok) return res.status(500).json({ error: 'SMTP connection failed', detail: check.error });
+  const db = getDb();
+  const user = db.prepare('SELECT email, name FROM users WHERE id = ?').get(req.user.id);
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'WeMatch — email test ✓',
+      html: `<p>Hi ${user.name}, your WeMatch email configuration is working correctly.</p>`,
+      text: `Hi ${user.name}, your WeMatch email configuration is working correctly.`,
+    });
+    res.json({ ok: true, message: `Test email sent to ${user.email}` });
+  } catch (e) {
+    res.status(500).json({ error: 'SMTP connected but send failed', detail: e.message });
+  }
 });
 
 module.exports = router;

@@ -1284,10 +1284,14 @@ async function inviteToCircle() {
   if (!name || name.length < 2) { showCircleMsg('Please enter a name (at least 2 characters).', '#F0607A'); return; }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showCircleMsg('Please enter a valid email address.', '#F0607A'); return; }
   try {
-    await API.post('/circles/invite', { name, email });
+    const result = await API.post('/circles/invite', { name, email });
     document.getElementById('circleName').value = '';
     document.getElementById('circleEmail').value = '';
-    showCircleMsg(`✓ Invite sent to ${name}! They'll receive a welcome email and daily reminders until they join.`, '#4ade80');
+    if (result.email_warning) {
+      showCircleMsg(`Invite saved for ${name}, but email delivery failed: ${result.email_warning}`, '#E8B84B');
+    } else {
+      showCircleMsg(`✓ Invite sent to ${name}! They'll receive a welcome email and daily reminders until they join.`, '#4ade80');
+    }
     loadCircle();
   } catch (err) {
     showCircleMsg(err.message && err.message.includes('upgrade') ? "You've reached the 3-member limit. Upgrade to add more." : (err.message || 'Failed to send invite.'), '#F0607A');
