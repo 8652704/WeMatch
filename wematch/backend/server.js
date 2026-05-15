@@ -101,10 +101,14 @@ setInterval(async () => {
       WHERE ci.joined = 0 AND ci.opted_out = 0
         AND (ci.last_reminder_at IS NULL OR ci.last_reminder_at < ?)
     `).all(cutoff);
+    const { sendCircleReminderEmail } = require('./utils/email');
     const baseUrl = process.env.APP_URL || 'https://wematch.dating';
     for (const row of pending) {
       try {
-        console.log(`[REMINDER] Sending to ${row.invitee_email} (invited by ${row.owner_name})`);
+        await sendCircleReminderEmail(
+          row.invitee_email, row.invitee_name, row.owner_name,
+          baseUrl, `${baseUrl}/?optout=${row.token}`
+        );
         db.prepare('UPDATE circle_invites SET last_reminder_at = ? WHERE id = ?')
           .run(new Date().toISOString(), row.id);
       } catch (e) { console.error('[REMINDER] Failed for', row.invitee_email, e.message); }

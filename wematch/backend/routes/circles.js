@@ -1,15 +1,9 @@
-// backend/routes/circles.js
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const { body, validationResult } = require('express-validator');
 const { getDb } = require('../config/database');
 const { requireAuth } = require('../middleware/auth');
-async function sendCircleWelcomeEmail(toEmail, toName, ownerName, baseUrl, optOutUrl) {
-  console.log(`[EMAIL] Circle welcome -> ${toEmail} (invited by ${ownerName})`);
-}
-async function sendCircleReminderEmail(toEmail, toName, ownerName, baseUrl, optOutUrl) {
-  console.log(`[EMAIL] Circle reminder -> ${toEmail} (for ${ownerName})`);
-}
+const { sendCircleWelcomeEmail, sendCircleReminderEmail } = require('../utils/email');
 
 const FREE_CIRCLE_LIMIT = 3;
 
