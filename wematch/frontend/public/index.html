@@ -1127,7 +1127,12 @@ function showSection(name) {
   if (name === 'circle') loadCircle();
   if (name === 'editprofile') loadProfilePhotos();
   if (name === 'profile') { loadProfile(); }
-  if (name === 'search') searchProfiles();
+  if (name === 'search') {
+    const el = document.getElementById('searchResults');
+    if (el && el.querySelector('.dash-empty')) {
+      // Keep placeholder until user clicks Search
+    }
+  }
 }
 
 function toggleProfileDropdown() {
@@ -1549,24 +1554,33 @@ async function searchProfiles() {
       el.innerHTML = '<div class="dash-empty"><span>🔍</span>No profiles match these filters yet.<br>Try broadening your search.</div>';
       return;
     }
+    const genderLabel = { man:'Man', woman:'Woman', nonbinary:'Non-binary', other:'Other' };
     el.innerHTML = users.map(u => {
       const interestTags = Array.isArray(u.interests)
         ? u.interests.slice(0,4).map(i => `<span style="background:rgba(255,255,255,.07);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;">${i}</span>`).join('')
         : '';
-      return `<div class="dash-card" onclick="openProfileModal('${u.id}')" style="cursor:pointer;">
+      const meta = [u.gender ? genderLabel[u.gender] || u.gender : null, u.location].filter(Boolean).join(' · ');
+      return `<div class="dash-card" style="cursor:pointer;" onclick="openProfileModal('${u.id}')">
         <div class="dash-card-header">
-          <div class="dash-avatar" style="width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;">
-            ${u.headshot ? `<img src="${u.headshot}" style="width:100%;height:100%;object-fit:cover;" />` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;">${initials(u.name)}</div>`}
+          <div class="dash-avatar" style="width:64px;height:64px;border-radius:14px;overflow:hidden;flex-shrink:0;">
+            ${u.headshot
+              ? `<img src="${u.headshot}" style="width:100%;height:100%;object-fit:cover;" />`
+              : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;">${initials(u.name)}</div>`}
           </div>
           <div style="flex:1;min-width:0;">
             <h4>${u.name}${u.age ? ', ' + u.age : ''}</h4>
-            <p>${u.location || ''}</p>
+            ${meta ? `<p style="font-size:.8rem;">${meta}</p>` : ''}
           </div>
         </div>
-        ${interestTags ? `<div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem;">${interestTags}</div>` : ''}
-        <button onclick="event.stopPropagation();expressInterest('${u.id}','${u.name}',this)" style="margin-top:.85rem;width:100%;background:linear-gradient(135deg,rgba(240,96,122,.2),rgba(155,111,212,.2));border:1px solid rgba(240,96,122,.3);color:#F0607A;border-radius:10px;padding:.45rem;font-size:.82rem;font-weight:600;cursor:pointer;">
-          ✨ Add to Referral Feed
-        </button>
+        ${interestTags ? `<div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.6rem;">${interestTags}</div>` : ''}
+        <div style="display:flex;gap:.5rem;margin-top:.85rem;">
+          <button onclick="event.stopPropagation();openProfileModal('${u.id}')" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.8);border-radius:10px;padding:.45rem;font-size:.82rem;font-weight:600;cursor:pointer;">
+            👤 View Profile
+          </button>
+          <button onclick="event.stopPropagation();expressInterest('${u.id}','${u.name}',this)" style="flex:1;background:linear-gradient(135deg,rgba(240,96,122,.2),rgba(155,111,212,.2));border:1px solid rgba(240,96,122,.3);color:#F0607A;border-radius:10px;padding:.45rem;font-size:.82rem;font-weight:600;cursor:pointer;">
+            ✨ Add to Feed
+          </button>
+        </div>
       </div>`;
     }).join('');
   } catch (err) {
@@ -1587,12 +1601,18 @@ async function openProfileModal(userId) {
       .map(t => `<img src="${photos[t]}" style="width:100%;max-height:320px;object-fit:cover;border-radius:14px;margin-bottom:.75rem;" />`)
       .join('');
     const interests = Array.isArray(user.interests) ? user.interests : [];
+    const lookingFor = Array.isArray(user.looking_for) ? user.looking_for : [];
+    const gLbl = { man:'Man', woman:'Woman', nonbinary:'Non-binary', other:'Other' };
     content.innerHTML = `
       ${photoHtml || `<div class="dash-avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 1rem;">${initials(user.name)}</div>`}
-      <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:.25rem;">${user.name}${user.age ? ', ' + user.age : ''}</h3>
-      ${user.location ? `<p style="color:rgba(255,255,255,.45);font-size:.85rem;margin-bottom:.75rem;">📍 ${user.location}</p>` : ''}
-      ${user.bio ? `<p style="color:rgba(255,255,255,.7);font-size:.88rem;line-height:1.6;margin-bottom:1rem;">${user.bio}</p>` : ''}
-      ${interests.length ? `<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.25rem;">${interests.map(i=>`<span style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.25rem .6rem;font-size:.78rem;">${i}</span>`).join('')}</div>` : ''}
+      <div style="text-align:center;margin-bottom:1rem;">
+        <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:.3rem;">${user.name}${user.age ? ', ' + user.age : ''}</h3>
+        ${user.gender ? `<span style="font-size:.8rem;background:rgba(240,96,122,.12);border:1px solid rgba(240,96,122,.25);color:#F0A0B0;border-radius:100px;padding:.2rem .75rem;">${gLbl[user.gender] || user.gender}</span>` : ''}
+        ${user.location ? `<p style="color:rgba(255,255,255,.45);font-size:.85rem;margin-top:.5rem;">📍 ${user.location}</p>` : ''}
+      </div>
+      ${user.bio ? `<p style="color:rgba(255,255,255,.7);font-size:.88rem;line-height:1.65;margin-bottom:1.1rem;border-top:1px solid rgba(255,255,255,.07);padding-top:.9rem;">${user.bio}</p>` : ''}
+      ${interests.length ? `<div style="margin-bottom:1.1rem;"><div style="font-size:.72rem;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.07em;text-transform:uppercase;margin-bottom:.45rem;">Interests</div><div style="display:flex;gap:.4rem;flex-wrap:wrap;">${interests.map(i=>`<span style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.25rem .6rem;font-size:.78rem;">${i}</span>`).join('')}</div></div>` : ''}
+      ${lookingFor.length ? `<p style="font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:1.1rem;">Looking for: ${lookingFor.join(', ')}</p>` : ''}
       <button onclick="expressInterest('${user.id}','${user.name}',this)" style="width:100%;background:linear-gradient(135deg,#F0607A,#9B6FD4);border:none;color:#fff;padding:.75rem;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer;margin-bottom:.75rem;">
         ✨ Add to My Referral Feed
       </button>
@@ -1655,7 +1675,7 @@ async function subscribe(plan) {
 </script>
 
 <!-- PROFILE DETAIL MODAL -->
-<div id="profileDetailModal" style="display:none;position:fixed;inset:0;background:rgba(10,10,15,.92);z-index:3000;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;">
+<div id="profileDetailModal" style="display:none;position:fixed;inset:0;background:rgba(10,10,15,.92);z-index:3000;overflow-y:auto;align-items:flex-start;justify-content:center;padding:2rem 1rem;">
   <div style="max-width:520px;width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:1.75rem;position:relative;margin-top:1rem;">
     <button onclick="closeProfileModal()" style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);width:32px;height:32px;border-radius:50%;font-size:1.1rem;cursor:pointer;">✕</button>
     <div id="profileModalContent"></div>
