@@ -1104,6 +1104,14 @@ function goHome() {
 //  Dashboard
 // ─────────────────────────────────────────────────
 async function showDashboard(startSection) {
+  // If user has no headshot, they haven't completed setup — send them back
+  try {
+    const { user } = await API.get('/auth/me');
+    if (!user.photos || !user.photos.headshot) {
+      showPhotoSetup();
+      return;
+    }
+  } catch {}
   document.getElementById('photoSetup').style.display = 'none';
   document.getElementById('dashboard').classList.add('open');
   loadFeed();
@@ -1652,7 +1660,7 @@ async function expressInterest(userId, userName, btn) {
   }
 }
 
-// Auto-login if token exists
+// Auto-login if token exists — showDashboard redirects to photo setup if headshot missing
 if (API.token) { showDashboard(); }
 </script>
 
