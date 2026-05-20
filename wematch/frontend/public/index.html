@@ -1666,14 +1666,15 @@ async function expressInterest(userId, userName, btn) {
   const inviteName = params.get('invite');
   if (inviteName) {
     history.replaceState({}, '', '/');
-    if (API.token) {
-      showDashboard();
-    } else {
-      openModal();
-      switchTab('signup');
-      const nameField = document.getElementById('signupName');
-      if (nameField) nameField.value = decodeURIComponent(inviteName);
-    }
+    // Always show signup for invite links — clear any stale token first
+    // so the invited person isn't accidentally logged in as someone else
+    API.token = null;
+    localStorage.removeItem('wm_token');
+    localStorage.removeItem('wm_refresh');
+    openModal();
+    switchTab('signup');
+    const nameField = document.getElementById('signupName');
+    if (nameField) nameField.value = decodeURIComponent(inviteName);
   } else if (API.token) {
     showDashboard();
   }
