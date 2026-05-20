@@ -49,6 +49,18 @@ router.post('/register', [
     INSERT INTO users (id, email, password, name) VALUES (?, ?, ?, ?)
   `).run(id, email, hash, name);
 
+  // Auto-join any pending circle invites for this email
+  const pendingInvites = db.prepare(
+    'SELECT id, owner_id, token FROM circle_invites WHERE invitee_email = ? AND joined = 0 AND opted_out = 0'
+  ).all(email);
+  for (const inv of pendingInvites) {
+    try {
+      db.prepare('UPDATE circle_invites SET joined = 1 WHERE id = ?').run(inv.id);
+      db.prepare('INSERT OR IGNORE INTO circles (id, owner_id, member_id, status) VALUES (?, ?, ?, ?)')
+        .run(uuid(), inv.owner_id, id, 'accepted');
+    } catch {}
+  }
+
   const { accessToken, refreshToken } = issueTokens(id);
   const user = db.prepare('SELECT id, email, name, avatar_url, created_at FROM users WHERE id = ?').get(id);
 

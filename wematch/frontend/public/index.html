@@ -1660,8 +1660,24 @@ async function expressInterest(userId, userName, btn) {
   }
 }
 
-// Auto-login if token exists — showDashboard redirects to photo setup if headshot missing
-if (API.token) { showDashboard(); }
+// Handle ?invite=NAME param from circle invite emails
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const inviteName = params.get('invite');
+  if (inviteName) {
+    history.replaceState({}, '', '/');
+    if (API.token) {
+      showDashboard();
+    } else {
+      openModal();
+      switchTab('signup');
+      const nameField = document.getElementById('signupName');
+      if (nameField) nameField.value = decodeURIComponent(inviteName);
+    }
+  } else if (API.token) {
+    showDashboard();
+  }
+})();
 </script>
 
 

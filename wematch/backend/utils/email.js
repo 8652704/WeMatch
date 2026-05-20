@@ -48,12 +48,12 @@ async function sendCircleWelcomeEmail(toEmail, toName, ownerName, baseUrl, optOu
         <p><strong>${ownerName}</strong> has added you to their personal match circle on <strong>WeMatch.dating</strong> — a platform where trusted friends and family help make introductions.</p>
         <p>As part of their circle, you'll be able to suggest potential matches for them and help them find someone special.</p>
         <p style="margin:1.5rem 0;">
-          <a href="${baseUrl}" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);color:#fff;padding:.75rem 1.75rem;border-radius:100px;text-decoration:none;font-weight:600;">Join WeMatch →</a>
+          <a href="${baseUrl}/?invite=${encodeURIComponent(toName)}" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);color:#fff;padding:.75rem 1.75rem;border-radius:100px;text-decoration:none;font-weight:600;">Join WeMatch →</a>
         </p>
         <p style="color:#888;font-size:.8rem;">Don't want to receive these emails? <a href="${optOutUrl}" style="color:#888;">Opt out here</a>.</p>
       </div>
     `,
-    text: `Hi ${toName},\n\n${ownerName} has invited you to join their WeMatch circle.\n\nSign up at: ${baseUrl}\n\nOpt out: ${optOutUrl}`,
+    text: `Hi ${toName},\n\n${ownerName} has invited you to join their WeMatch circle.\n\nSign up at: ${baseUrl}/?invite=${encodeURIComponent(toName)}\n\nOpt out: ${optOutUrl}`,
   });
   console.log(`[EMAIL] Circle welcome sent to ${toEmail}`);
   return { sent: true };
@@ -75,12 +75,12 @@ async function sendCircleReminderEmail(toEmail, toName, ownerName, baseUrl, optO
         <p>Hi ${toName},</p>
         <p><strong>${ownerName}</strong> invited you to join their WeMatch circle. You haven't signed up yet — it only takes a minute!</p>
         <p style="margin:1.5rem 0;">
-          <a href="${baseUrl}" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);color:#fff;padding:.75rem 1.75rem;border-radius:100px;text-decoration:none;font-weight:600;">Join Now →</a>
+          <a href="${baseUrl}/?invite=${encodeURIComponent(toName)}" style="background:linear-gradient(135deg,#F0607A,#9B6FD4);color:#fff;padding:.75rem 1.75rem;border-radius:100px;text-decoration:none;font-weight:600;">Join Now →</a>
         </p>
         <p style="color:#888;font-size:.8rem;">Don't want reminders? <a href="${optOutUrl}" style="color:#888;">Opt out here</a>.</p>
       </div>
     `,
-    text: `Hi ${toName},\n\n${ownerName} is still waiting for you to join their WeMatch circle.\n\nSign up at: ${baseUrl}\n\nOpt out: ${optOutUrl}`,
+    text: `Hi ${toName},\n\n${ownerName} is still waiting for you to join their WeMatch circle.\n\nSign up at: ${baseUrl}/?invite=${encodeURIComponent(toName)}\n\nOpt out: ${optOutUrl}`,
   });
   console.log(`[EMAIL] Circle reminder sent to ${toEmail}`);
 }
